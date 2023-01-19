@@ -1,3 +1,4 @@
+set PYTHONPATH=%PYTHONPATH%;"C:\Users\yrr8790\OneDrive - HMESRETL\Desktop\Project-Template-Prd\"
 cd ..
-cd Notebooks/Training/
-python main.py
+python Run_Train_Function/main.py
+pause

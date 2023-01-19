@@ -16,4 +16,4 @@ PASSWORD, USERNAME = ['','']
 
 # Log Paths
 performance_logs = root + 'Logs/Performance_Logs/log.txt'
-prediction_logs = root + 'Logs/Prediction_Logs/log.txt'
+prediction_logs = root + 'Logs/Prediction_Logs/{}.csv'

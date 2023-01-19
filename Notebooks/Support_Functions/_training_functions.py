@@ -23,3 +23,5 @@ def reg_evaluate(model, X, y, k=5):
     MAE = round(np.mean(np.abs((cross_val_score(model, X, y, cv=k, scoring='neg_mean_absolute_error')))),2)
 
     return [ACC, R2, RMSE, MAPE , MAE]
+
+
