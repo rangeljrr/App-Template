@@ -1,5 +1,4 @@
 from os.path import exists as file_exists
-from Notebooks.Support_Functions._config import performance_logs
 
 def append_log(path, values):
     """ This file will check if there is a file that already exists, if not then it 
@@ -7,10 +6,10 @@ def append_log(path, values):
         
         The function will then write the accuracy metrics to the file"""
 
-    if file_exists(f'{performance_logs}'):
+    if file_exists(path):
         pass
     else:
-        with open(performance_logs,'w') as f:
+        with open(path,'w') as f:
             f.write('Model,Accuracy,R2,RMSE,MAPE,MAE,Timestamp')
 
     
