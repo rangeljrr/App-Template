@@ -12,6 +12,7 @@ def build_param_grid():
     }
 
     param_grid = ParameterGrid(param_settings)
+    
     return param_grid
 
 def build_model(params):
