@@ -43,12 +43,8 @@ def train_model(dataframe):
         model = build_model_object()
 
         # Fitting Model
-        seasonal_comparison_offset = validation_steps - yearly_steps
         model.train(dataframe[cols], date_column_name, target_column_name, h)
         forecast_results = model.forecast(dataframe[cols], validation_steps)
-        
-        offset_forecast = forecast_results.iloc[-validation_steps-seasonal_comparison_offset:-seasonal_comparison_offset]
-        forecast_values = offset_forecast[target_column_name + '_Forecast'].values
 
         # Test Period Forecast
         test_period_forecast = forecast_results[[target_column_name,target_column_name + '_Forecast']].dropna().iloc[-validation_steps:][target_column_name + '_Forecast'].values
@@ -71,20 +67,38 @@ def train_model(dataframe):
         growth = (avg_last_year_1 - avg_last_year_2) / avg_last_year_2
         #growth = max(-.10, min(growth, .10))
         
-        # Creating a seasonal estimate 
-        yoy_seasonal_forecast = (dataframe.iloc[-validation_steps:][target_column_name] * (1 + growth)).values
-       
+        # Offsetting 
+        offset = validation_steps - yearly_steps
+
+        if offset == 0:
+            # If yearly steps line up to validation steps, no need to offset
+            forecast_values = forecast_results.iloc[-validation_steps:][target_column_name + '_Forecast'].values
+            yoy_seasonal_forecast = (dataframe.iloc[-validation_steps:][target_column_name] * (1 + growth)).values
+            prev_year_values = dataframe.iloc[-validation_steps:][target_column_name].values
+
+        elif offset > 0:
+            # If yearly steps < validation steps will need to offset forecast
+            forecast_values = forecast_results.iloc[-validation_steps-offset:-offset][target_column_name + '_Forecast'].values
+            yoy_seasonal_forecast = (dataframe.iloc[-validation_steps:][target_column_name] * (1 + growth)).values
+            prev_year_values = dataframe.iloc[-validation_steps:][target_column_name].values
+
+        elif offset < 0:
+            # If yearly steps > validation steps will need to offsets actuals
+            forecast_values = forecast_results.iloc[-validation_steps:][target_column_name + '_Forecast'].values
+            yoy_seasonal_forecast = (dataframe.iloc[-validation_steps-abs(offset):-abs(offset)][target_column_name] * (1 + growth)).values
+            prev_year_values = dataframe.iloc[-validation_steps-abs(offset):-abs(offset)][target_column_name].values
+
         # Write Plots for YoY Growth vs Forecast
         figure, axis = plt.subplots(figsize=(16,8))
         plt.plot(forecast_values, label='Validation Forecast')
         plt.plot(yoy_seasonal_forecast, label='Prev Year + YoY Growth')
-        plt.plot(dataframe.iloc[-validation_steps:][target_column_name].values, label='Prev Year')
+        plt.plot(prev_year_values, label='Prev Year')
         plt.legend()
         plt.savefig(f"../run_results/{iteration_name}/validation_plots_YoY_growth/{h}.png")
 
         # MAPE Growth Seasonal Data vs Forecast
         mape_seasonal_yoy = mape(yoy_seasonal_forecast, forecast_values)
-        
+
         # MAPE CV Growth Seasonal Data vs Forecast
         seasonal_cv = np.std(yoy_seasonal_forecast) / np.mean(yoy_seasonal_forecast)
         forecast_cv = np.std(forecast_values) / np.mean(forecast_values)
