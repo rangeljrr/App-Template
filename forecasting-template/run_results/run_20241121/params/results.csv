@@ -1,0 +1,2 @@
+label,model_run_ts,prophet,prophet_tuned,arima,sarima
+,2024-11-21 11:53:20.949215,{},"{'changepoint_prior_scale': 0.01, 'seasonality_mode': 'multiplicative', 'seasonality_prior_scale': 10.0}","(4, 1, 2)","[(1, 1, 0), (1, 1, 0, 12)]"
