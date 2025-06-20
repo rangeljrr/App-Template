@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import matplotlib.pyplot as plt
 import optuna
 
 from sklearn.metrics import (
@@ -13,30 +14,59 @@ from sklearn.model_selection import (
 from sklearn.base import clone
 
 
-def create_feature_importance_plot(model, feature_names, output_path):
+def create_feature_importance_plot(model, feature_names,output_path):
+    """
+    Creates and optionally saves a horizontal bar chart of feature importances using Matplotlib.
+
+    Parameters:
+    ----------
+    model : object
+        A trained model that exposes a `feature_importances_` attribute (e.g., from sklearn.ensemble).
+    
+    feature_names : list or pandas.Index
+        Names of the features in the same order used to train the model.
+    
+    output_path : str, optional
+        Path to save the figure (e.g., '/dbfs/tmp/importance_plot.png').
+        If None, the plot will be displayed inline (e.g., in Databricks or Jupyter).
+    
+    Notes:
+    -----
+    - This function does not require Kaleido or Plotly.
+    - Saved plots can be in formats like .png, .pdf, .jpg, etc., depending on the file extension in `output_path`.
+
+    Example:
+    --------
+    >>> create_feature_importance_plot_matplotlib(model, feature_names)
+    >>> create_feature_importance_plot_matplotlib(model, feature_names, output_path="/dbfs/tmp/plot.png")
+    """
+    # Ensure the model supports feature importances
     if not hasattr(model, 'feature_importances_'):
+        print("Warning: Model has no 'feature_importances_' attribute. Skipping plot.")
         return
 
+    # Create a DataFrame for easier plotting and sorting
     importance_df = pd.DataFrame({
         'Feature': feature_names,
         'Importance': model.feature_importances_
-    }).sort_values(by='Importance', ascending=False)
+    }).sort_values(by='Importance', ascending=True)  # Ascending so most important is at the top
 
-    fig = px.bar(
-        importance_df,
-        x='Importance',
-        y='Feature',
-        orientation='h',
-        title='Feature Importance',
-        width=1000,
-        height=800
-    )
-    fig.update_layout(yaxis={'categoryorder': 'total ascending'})
+    # Initialize the figure
+    plt.figure(figsize=(10, 8))
 
-    if output_path.endswith('.html'):
-        fig.write_html(output_path)
-    else:
-        fig.write_image(output_path)
+    # Create horizontal bar plot
+    plt.barh(importance_df['Feature'], importance_df['Importance'], color='skyblue')
+
+    # Add labels and title
+    plt.title('Feature Importance')
+    plt.xlabel('Importance')
+    plt.ylabel('Feature')
+    plt.tight_layout()  # Ensure everything fits
+
+    # Save or display the plot
+    if output_path:
+        plt.savefig(output_path, bbox_inches='tight')
+        plt.close()
 
 
 def evaluate_classification(y_true, y_pred=None, y_proba=None, threshold=0.5, return_format="dataframe", verbose=False):
